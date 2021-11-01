@@ -1,0 +1,109 @@
+---
+title: "ESM 203 Assignment 2 Part 3"
+author: "Taylor Medina"
+date: "10/26/2021"
+output: html_document
+---
+
+```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(lubridate)
+library(janitor)
+
+```
+
+
+```{r, message=FALSE}
+
+rain_sb <- read_csv(here("data", "2760004.csv")) %>% 
+  clean_names()
+
+rain_sb_new <- rain_sb %>% 
+  separate(col = date,
+           into = c("date", "time"), #separates date/time column to data and time
+           sep = " ", # split at the space
+           extra = "merge",
+           remove = FALSE) %>% # do not remove any data
+  mutate(date = ymd(date), # converts date in a date class
+         year = year(date), # splices out date
+         month = month(date), # splices out month
+         month = month.abb[month], # converts month number to abbreviated name
+         qpcp = na_if(qpcp, -9999.00)) # converts any value of -9999.00 to NaN
+
+```
+### Question 3
+
+#### Part A
+```{r, warning = FALSE}
+
+rain_sb_year <- rain_sb_new %>% 
+  group_by(year) %>% 
+  summarize(rain = mean(qpcp, na.rm = TRUE)) # calculates mean rain for the year
+  
+ggplot(data = rain_sb_year, aes(x = year, y = rain)) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  labs(x = "year",
+       y = "rainfall (100ths of an in)",
+       title = "Average rain per year in Santa Barbara (1971-2014)") 
+
+```
+
+
+#### Part B
+```{r}
+
+ggplot(subset(rain_sb_year, year %in% c("1975":"1980")), 
+       aes(x = year, y = rain)) +
+  geom_line() +
+  geom_point() +
+  theme_classic() +
+  labs(x = "year",
+       y = "average rainfall (100ths of an inch)",
+       title = "Average Yearly Rainfall in Santa Barbara from 1975 to 1980")
+
+ggplot(subset(rain_sb_year, year %in% c("1999":"2004")),
+       aes(x = year, y = rain)) +
+  geom_line() +
+  geom_point() +
+  theme_classic() +
+  labs(x = "year",
+       y = "average rainfall (100ths of an inch)",
+       title = "Average Yearly Rainfall in Santa Barbara from 1999 to 2004")
+  
+
+```
+
+
+### Question 4
+```{r, message = FALSE}
+
+rain_sb_grouped <- rain_sb_new %>% 
+  group_by(month, year) %>% 
+  summarize(total_rain = sum(qpcp, na.rm = TRUE)) # calculates the total rain per month given a year
+
+rain_sb_monthly <- rain_sb_grouped %>% 
+  group_by(month) %>% 
+  summarize(rain_month = mean(total_rain), # calculates the mean of the rain per month
+            sd_rain = sd(total_rain)) %>%
+  mutate(month = factor(month, levels = month.abb)) # puts the months in order 
+
+```
+
+```{r, message = FALSE}
+
+ggplot(data = rain_sb_monthly, aes(x = month, y = rain_month, group = 1)) + 
+  geom_point() +
+  geom_line() +
+  ylim(0,1000) +
+  theme_classic() +
+  labs(x = "month",
+       y = "average monthly rainfall (100ths of in)",
+       title = "Average Monthly Rainfall in Santa Barbara")
+  
+```
+
