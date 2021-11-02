@@ -31,7 +31,8 @@ rain_sb_new <- rain_sb %>%
          year = year(date), # splices out date
          month = month(date), # splices out month
          month = month.abb[month], # converts month number to abbreviated name
-         qpcp = na_if(qpcp, -9999.00)) # converts any value of -9999.00 to NaN
+         qpcp = na_if(qpcp, -9999.00),
+         qpcp = na_if(qpcp, 999.99)) # converts any value of -9999.00 to NaN
 
 ```
 ### Question 3
@@ -39,23 +40,24 @@ rain_sb_new <- rain_sb %>%
 #### Part A
 ```{r, warning = FALSE}
 
-rain_sb_year <- rain_sb_new %>% 
-  group_by(year) %>% 
-  summarize(rain = mean(qpcp, na.rm = TRUE)) # calculates mean rain for the year
-  
-ggplot(data = rain_sb_year, aes(x = year, y = rain)) +
+ggplot(data = rain_sb_new, aes(x = date, y = qpcp)) +
   geom_point() +
-  geom_line() +
-  theme_classic() +
-  labs(x = "year",
-       y = "rainfall (100ths of an in)",
-       title = "Average rain per year in Santa Barbara (1971-2014)") 
+  theme_classic() + 
+  labs(x = "date",
+       y = "rainfall (100ths of an inch)",
+       title = "Rainfall in Santa Barbara from 1971 - 2013")
+
 
 ```
 
 
 #### Part B
 ```{r}
+
+rain_sb_year <- rain_sb_new %>% 
+  group_by(year) %>% 
+  summarize(rain = mean(qpcp, na.rm = TRUE),
+            sd = sd(qpcp, na.rm = TRUE)) # calculates mean rain for the year
 
 ggplot(subset(rain_sb_year, year %in% c("1975":"1980")), 
        aes(x = year, y = rain)) +
@@ -74,6 +76,15 @@ ggplot(subset(rain_sb_year, year %in% c("1999":"2004")),
   labs(x = "year",
        y = "average rainfall (100ths of an inch)",
        title = "Average Yearly Rainfall in Santa Barbara from 1999 to 2004")
+
+ggplot(subset(rain_sb_year,year %in% c("2008":"2013")),
+       aes(x = year, y = rain)) +
+  geom_line() +
+  geom_point() +
+  theme_classic() +
+    labs(x = "year",
+       y = "average rainfall (100ths of an inch)",
+       title = "Average Yearly Rainfall in Santa Barbara from 2008 to 2013")
   
 
 ```
@@ -99,11 +110,10 @@ rain_sb_monthly <- rain_sb_grouped %>%
 ggplot(data = rain_sb_monthly, aes(x = month, y = rain_month, group = 1)) + 
   geom_point() +
   geom_line() +
-  ylim(0,1000) +
   theme_classic() +
   labs(x = "month",
-       y = "average monthly rainfall (100ths of in)",
-       title = "Average Monthly Rainfall in Santa Barbara")
+       y = "total monthly rainfall (100ths of an inch)",
+       title = "Climatology of Santa Barbara")
   
 ```
 
